@@ -29,60 +29,7 @@ print ("======================================")
 user1= input("Enter your FMC api username: ")
 pass1= getpass.getpass(prompt="Enter your FMC password: ")
 ipaddr= input("Enter the IP address of Firepower Management Center: ")
-print ("Enter the object type to delete?")
-print ("1. networks")
-print ("2. ports")
-print ("3. hosts")
-print ("4. network groups")
-print ("5. port groups")
-print ("6. address ranges")
-print ("7. everything")
 
-while True:
-        try:
-            question = int(input('Options (1-7),?'))
-            
-        except ValueError:
-            print("Sorry, that is an invaild option.")
-            #better try again... Return to the start of the loop
-            continue
-
-        if question == 1:
-            fmcobj='networks'
-            break
-
-        elif question == 2:
-            fmcobj='ports'
-            break
-
-        elif question == 3:
-            fmcobj='hosts'
-            break
-
-        elif question == 4:
-            fmcobj='networkgroups'
-            break   
-
-        elif question == 5:
-            fmcobj='portobjectgroups'
-            break   
-
-        elif question == 6:
-            fmcobj='ranges'
-            break   
-        
-        elif question == 7:
-            fmcobj='ranges'
-            fmcobj='portobjectgroups'
-            fmcobj='networkgroups'
-            fmcobj='hosts'
-            fmcobj='ports'
-            fmcobj='networks'
-            break   
-
-        else:
-            print('That\'s not an option!')
-            continue
 
 url = "https://%s/api/fmc_platform/v1/auth/generatetoken" % ipaddr
 
@@ -95,54 +42,59 @@ headers = {
 
 response = requests.request("POST", url, headers=headers, auth=(user1,pass1), verify=False)
 
-# Authenicates token used in addiotnal HTTPS CRUD request
+# Authenicates token used in additional HTTPS CRUD request
 auth = response.headers['X-auth-access-token']
 
-url = "https://%s/api/fmc_config/v1/domain/e276abec-e0f2-11e3-8169-6d9ed49b625f/object/%s" % (ipaddr, fmcobj)
+def obj2del(fmcobj):
+    url = "https://%s/api/fmc_config/v1/domain/e276abec-e0f2-11e3-8169-6d9ed49b625f/object/%s" % (ipaddr, fmcobj)
 
-querystring = {"limit":"1000"}
+    querystring = {"limit":"1000"}
 
-headers = {
-    'x-auth-access-token': auth,
-    'cache-control': "no-cache",
-    'postman-token': "ff30c506-4739-9d4d-2e53-0dc7efc2036a"
-    }
+    headers = {
+        'x-auth-access-token': auth,
+        'cache-control': "no-cache",
+        'postman-token': "ff30c506-4739-9d4d-2e53-0dc7efc2036a"
+        }
 
-# get all objects type based in user reponse from FMC 
-response = requests.request("GET", url, headers=headers, params=querystring, verify=False)
-results=[]
-raw = response.json()
-offset = 0
-p = 0
+    # get all objects type based in user reponse from FMC 
+    response = requests.request("GET", url, headers=headers, params=querystring, verify=False)
+    results=[]
+    raw = response.json()
+    offset = 0
+    p = 0
 
-if raw['paging']['pages'] == 0:
-    for pages in range(p):
-        querystring = {"offset":"%d" % offset,"limit":"1000"}
-        response = requests.request("GET", url, headers=headers, params=querystring, verify=False)
-        offset += 1000
-        raw=response.json()
-        #print [raw[i] for i in raw.keys()]
-        #print raw['items'][1]['name']
-        #print [raw[i][0][0].get('name') for i in raw.keys()]
-        for i in raw['items']:  
-            results.append(i)
+    if raw['paging']['pages'] == 0:
+        for pages in range(p):
+            querystring = {"offset":"%d" % offset,"limit":"1000"}
+            response = requests.request("GET", url, headers=headers, params=querystring, verify=False)
+            offset += 1000
+            raw=response.json()
+            #print [raw[i] for i in raw.keys()]
+            #print raw['items'][1]['name']
+            #print [raw[i][0][0].get('name') for i in raw.keys()]
+            for i in raw['items']:  
+                results.append(i)
 
-else:
-    p=raw['paging']['pages']
-    # FMC get all objects for user specified type
-    for pages in range(p):
-        querystring = {"offset":"%d" % offset,"limit":"1000"}
-        response = requests.request("GET", url, headers=headers, params=querystring, verify=False)
-        offset += 1000
-        raw=response.json()
-        #print [raw[i] for i in raw.keys()]
-        #print raw['items'][1]['name']
-        #print [raw[i][0][0].get('name') for i in raw.keys()]
-        for i in raw['items']:  
-            results.append(i)
-#test of results link
-#for i in results:
-#   print i['links']['self']
+    else:
+        p=raw['paging']['pages']
+        # FMC get all objects for user specified type
+        for pages in range(p):
+            querystring = {"offset":"%d" % offset,"limit":"1000"}
+            response = requests.request("GET", url, headers=headers, params=querystring, verify=False)
+            offset += 1000
+            raw=response.json()
+            #print [raw[i] for i in raw.keys()]
+            #print raw['items'][1]['name']
+            #print [raw[i][0][0].get('name') for i in raw.keys()]
+            for i in raw['items']:  
+                results.append(i)
+    #test of results link
+    #for i in results:
+    #   print i['links']['self']
+
+    # Delete objects
+    delobj(results)
+
 
 def delobj(obj):
 
@@ -180,9 +132,61 @@ def delobj(obj):
                 }  
                 
                 netdel.status_code = 200
+                
 
+# Show Menu
+print ("Enter the object type to delete?")
+print ("1. networks")
+print ("2. ports")
+print ("3. hosts")
+print ("4. network groups")
+print ("5. port groups")
+print ("6. address ranges")
+print ("7. everything")
 
+while True:
+        try:
+            question = int(input('Options (1-7),?'))
+            
+        except ValueError:
+            print("Sorry, that is an invaild option.")
+            #better try again... Return to the start of the loop
+            continue
 
+        if question == 1:
+            obj2del('networks')
+            break
 
-delobj(results)
+        elif question == 2:
+            obj2del('ports')
+            break
+
+        elif question == 3:
+            obj2del('hosts')
+            break
+
+        elif question == 4:
+            obj2del('networkgroups')
+            break   
+
+        elif question == 5:
+            obj2del('portobjectgroups')
+            break   
+
+        elif question == 6:
+            obj2del('ranges')
+            break   
+        
+        elif question == 7:
+            obj2del('ranges')
+            obj2del('portobjectgroups')
+            obj2del('networkgroups')
+            obj2del('hosts')
+            obj2del('ports')
+            obj2del('networks')
+            break   
+
+        else:
+            print('That\'s not an option!')
+            continue
 
