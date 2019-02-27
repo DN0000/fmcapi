@@ -8,8 +8,8 @@
 # Use script at you own risk, and no warranties are inferred or granted. 
 # =====================================================================================================================
 import requests
+import getpass
 import json
-import requests
 import logging
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -18,28 +18,29 @@ requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.INFO)
 requests_log.propagate = True
 
-print "======================================"
-print "=      Cisco Firepower API           ="
-print "=      Object Delete script          ="
-print "=  Will only delete unused objects   ="
-print "=     Use at your own Risk!          ="
-print "======================================"
+print ("======================================")
+print ("=      Cisco Firepower API           =")
+print ("=      Object Delete script          =")
+print ("=  Will only delete unused objects   =")
+print ("=     Use at your own Risk!          =")
+print ("======================================")
 
 # Interactive Input of FMC and login
-user1= raw_input("Enter your FMC api username: ")
-pass1= raw_input("Enter your FMC password: ")
-ipaddr= raw_input("Enter the IP address of Firepower Management Center: ")
-print "Enter the object type to delete?"
-print "1. networks"
-print "2. ports"
-print "3. hosts"
-print "4. network groups"
-print "5. port groups"
-print "6. address ranges"
+user1= input("Enter your FMC api username: ")
+pass1= getpass.getpass(prompt="Enter your FMC password: ")
+ipaddr= input("Enter the IP address of Firepower Management Center: ")
+print ("Enter the object type to delete?")
+print ("1. networks")
+print ("2. ports")
+print ("3. hosts")
+print ("4. network groups")
+print ("5. port groups")
+print ("6. address ranges")
+print ("7. everything")
 
 while True:
         try:
-            question = int(raw_input('Options\(1,2,3,4,5),?'))
+            question = int(input('Options (1-7),?'))
             
         except ValueError:
             print("Sorry, that is an invaild option.")
@@ -68,6 +69,15 @@ while True:
 
         elif question == 6:
             fmcobj='ranges'
+            break   
+        
+        elif question == 7:
+            fmcobj='ranges'
+            fmcobj='portobjectgroups'
+            fmcobj='networkgroups'
+            fmcobj='hosts'
+            fmcobj='ports'
+            fmcobj='networks'
             break   
 
         else:
@@ -103,6 +113,7 @@ response = requests.request("GET", url, headers=headers, params=querystring, ver
 results=[]
 raw = response.json()
 offset = 0
+p = 0
 
 if raw['paging']['pages'] == 0:
     for pages in range(p):
